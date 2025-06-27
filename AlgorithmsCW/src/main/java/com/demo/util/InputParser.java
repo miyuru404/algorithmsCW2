@@ -3,8 +3,7 @@ package com.demo.util;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class InputParser {
 
@@ -60,6 +59,30 @@ public class InputParser {
         helper function that validate the data
     */
     private static void validateInput(List<Integer> collectedNumbers) throws IllegalArgumentException{
+
+        int n = collectedNumbers.size(); //original size of the list
+        Set<Integer> numberSet = new HashSet<>(collectedNumbers);
+        List<Integer> sortedValues = new ArrayList<>(collectedNumbers); // Create a copy to sort
+        Collections.sort(sortedValues);
+
+        // check for empty input file
+        if(collectedNumbers.isEmpty()){
+            throw new IllegalArgumentException("input file is empty");
+        }
+
+        // check for duplicate value
+        if(numberSet.size() != n){
+            throw new IllegalArgumentException("duplicate values found");
+        }
+
+        // check for correct order of values
+        for(int i = 0 ; i < n ; i++){
+            if(sortedValues.get(i) != (i+1)){
+                throw new IllegalArgumentException("Numbers are not a complete sequence from 1 to " + n + "  Found ");
+            }
+        }
+
+        System.out.println(" Validation successful ");
 
     }
 
