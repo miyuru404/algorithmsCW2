@@ -79,11 +79,10 @@ public class TreeState {
     }
 
 
-     /* Generates a hash code for this TreeState object.*/
+     /* hash code */
 
     @Override
     public int hashCode() {
-        //  generate a hash code based on the content of the array.
         // this ensures  Arrays.equals().
         return Arrays.hashCode(treeValues);
     }
