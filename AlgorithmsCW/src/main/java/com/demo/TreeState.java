@@ -73,8 +73,8 @@ public class TreeState {
         //  cast the object to TreeState.
         TreeState other = (TreeState) o;
 
-        // 4. Content comparison: The core of equality for TreeState is the content of its treeValues array.
-        //    Arrays.equals() is specifically designed for comparing array contents element by element.
+
+        //    Arrays.equals() comparing array contents element by element.
         return Arrays.equals(this.treeValues, other.treeValues);
     }
 
