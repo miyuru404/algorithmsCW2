@@ -9,48 +9,49 @@ public class Main {
         // Use command line argument if provided, otherwise use default
         String filePath =  "input/bounded_7_0.txt";
 
-        System.out.println("=== TREE SORTING ALGORITHM ===");
+        System.out.println("\n=== TREE SORTING ALGORITHM ===");
         System.out.println("Input file: " + filePath);
         System.out.println();
 
         try {
             // Step 1: Parse input file
-            System.out.println("--- Step 1: Parsing Input ---");
+            System.out.println("Step 01: Parsing Input...\n ");
             int[] treeData = InputParser.parser(filePath);
-            System.out.println("Successfully parsed tree data: " + Arrays.toString(treeData));
-            System.out.println("Number of nodes: " + treeData.length);
+            System.out.println(" * parsed tree data: " + Arrays.toString(treeData));
+            System.out.println(" * Number of nodes: " + treeData.length);
             System.out.println();
 
             // Step 2: Create initial tree state
-            System.out.println("--- Step 2: Creating Tree State ---");
+            System.out.println("Step 2: Creating Tree State...\n");
             TreeState initialState = new TreeState(treeData);
-            System.out.println("Initial tree state: " + initialState);
-            printTreeStructure(initialState, "Initial Tree");
+            System.out.println(" * Initial tree state: " + initialState);
+            System.out.println();
+
 
             // Step 3: Generate target BST
-            System.out.println("--- Step 3: Generating Target BST ---");
+            System.out.println("Step 3: Generating Target BST...\n");
             TreeState targetState = TreeSolver.createTargetBST(initialState);
-            System.out.println("Target BST state: " + targetState);
-            printTreeStructure(targetState, "Target BST");
+            System.out.println(" * Target BST state: " + targetState);
+            System.out.println();
 
             // Check if already sorted
             if (initialState.equals(targetState)) {
-                System.out.println("✓ Tree is already a valid BST! No swaps needed.");
+                System.out.println("* Tree is already a valid BST! No swaps needed.");
                 return;
             }
 
             // Step 4: Solve the problem
-            System.out.println("--- Step 4: Finding Optimal Solution ---");
-            System.out.println("Searching for minimum swap sequence...");
+            System.out.println("Step 4: Finding Optimal Solution...\n");
+            //System.out.println("Searching for minimum swap sequence...");
 
             long startTime = System.currentTimeMillis();
             TreeSolver.SearchResult result = TreeSolver.solve(initialState);
             long endTime = System.currentTimeMillis();
 
             // Step 5: Display results
-            System.out.println("--- Step 5: Results ---");
+            //System.out.println("--- Step 5: Results ---");
             if (result != null) {
-                System.out.println("✓ Solution found!");
+                System.out.println(" * Solution found!\n");
                 System.out.println("Minimum swaps required: " + result.getNumberOfSwaps());
                 System.out.println("Nodes explored: " + result.getNodesExplored());
                 System.out.println("Execution time: " + (endTime - startTime) + " ms");
@@ -68,11 +69,11 @@ public class Main {
                 System.out.println();
 
                 // Step 6: Verify solution
-                System.out.println("--- Step 6: Verification ---");
+                System.out.println("Verification");
                 if (verifySolution(initialState, targetState, result)) {
-                    System.out.println("✓ Solution verified successfully!");
+                    System.out.println("* Solution verified successfully!");
                 } else {
-                    System.out.println("✗ Solution verification failed!");
+                    System.out.println("* Solution verification failed!");
                 }
 
                 // Display performance metrics
@@ -103,40 +104,7 @@ public class Main {
         System.out.println("\n=== PROGRAM FINISHED ===");
     }
 
-    /**
-     * Prints the tree structure in a visual format
-     */
-    private static void printTreeStructure(TreeState state, String title) {
-        System.out.println(title + ":");
-        int n = state.getNumberOfNode();
 
-        if (n == 0) {
-            System.out.println("Empty tree");
-            return;
-        }
-
-        // Calculate number of levels
-        int levels = (int) Math.ceil(Math.log(n + 1) / Math.log(2));
-
-        for (int level = 0; level < levels; level++) {
-            int startIndex = (int) Math.pow(2, level) - 1;
-            int endIndex = Math.min(startIndex + (int) Math.pow(2, level), n);
-
-            // Print leading spaces for alignment
-            int spaces = (int) Math.pow(2, levels - level - 1) - 1;
-            printSpaces(spaces);
-
-            // Print values at this level
-            for (int i = startIndex; i < endIndex; i++) {
-                System.out.print(state.getValue(i));
-                if (i < endIndex - 1) {
-                    printSpaces((int) Math.pow(2, levels - level) - 1);
-                }
-            }
-            System.out.println();
-        }
-        System.out.println();
-    }
 
     /**
      * Helper method to print specified number of spaces
