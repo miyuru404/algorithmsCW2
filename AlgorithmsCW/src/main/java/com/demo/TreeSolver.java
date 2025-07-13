@@ -113,7 +113,6 @@ public class TreeSolver {
             }
         }
 
-        // No solution found (shouldn't happen for valid inputs)
         return null;
     }
 
