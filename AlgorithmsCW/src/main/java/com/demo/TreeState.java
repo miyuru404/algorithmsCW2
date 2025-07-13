@@ -28,7 +28,7 @@ public class TreeState {
             // Root (index 0) has no parent
             return -1;
         }
-        return (childIndex - 1) / 2; // Integer division gives the parent index
+        return (childIndex - 1) / 2; // Integer division for parent index
     }
 
     public int getLeftChildIndex(int parentIndex) {
