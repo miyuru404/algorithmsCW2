@@ -4,9 +4,6 @@ import java.util.Arrays;
 
 public class TreeState {
 
-    public static int numberOfHashCodeCalled = 0;
-
-
     private int[] treeValues;
 
     private final int cachedHash;
@@ -18,9 +15,6 @@ public class TreeState {
 
     }
 
-    public static int returnH(){
-        return numberOfHashCodeCalled;
-    }
 
     public int getNumberOfNode(){
         return treeValues.length;
@@ -101,7 +95,6 @@ public class TreeState {
 
     @Override
     public int hashCode() {
-        numberOfHashCodeCalled++;
         return cachedHash; // return the saved value
     }
 
