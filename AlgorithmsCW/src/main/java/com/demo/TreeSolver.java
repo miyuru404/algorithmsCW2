@@ -10,6 +10,7 @@ public class TreeSolver {
         private List<String> path;
         private int depth;
 
+
         public SearchNode(TreeState state, List<String> path, int depth) {
             this.state = state;
             this.path = new ArrayList<>(path);
