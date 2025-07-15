@@ -28,7 +28,7 @@ public class TreeState {
             // Root (index 0) has no parent
             return -1;
         }
-        return (childIndex - 1) / 2; // Integer division gives the parent index
+        return (childIndex - 1) / 2; // Integer division for parent index
     }
 
     public int getLeftChildIndex(int parentIndex) {
@@ -73,17 +73,16 @@ public class TreeState {
         //  cast the object to TreeState.
         TreeState other = (TreeState) o;
 
-        // 4. Content comparison: The core of equality for TreeState is the content of its treeValues array.
-        //    Arrays.equals() is specifically designed for comparing array contents element by element.
+
+        //    Arrays.equals() comparing array contents element by element.
         return Arrays.equals(this.treeValues, other.treeValues);
     }
 
 
-     /* Generates a hash code for this TreeState object.*/
+     /* hash code */
 
     @Override
     public int hashCode() {
-        //  generate a hash code based on the content of the array.
         // this ensures  Arrays.equals().
         return Arrays.hashCode(treeValues);
     }
