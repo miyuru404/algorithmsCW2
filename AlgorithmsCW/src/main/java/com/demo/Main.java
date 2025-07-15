@@ -7,7 +7,7 @@ public class Main {
     public static void main(String[] args) {
 
         // Use command line argument if provided, otherwise use default
-        String filePath =  "input/bounded_7_0.txt";
+        String filePath =  "input/bounded_31_0.txt";
 
         System.out.println("\n=== TREE SORTING ALGORITHM ===");
         System.out.println("Input file: " + filePath);

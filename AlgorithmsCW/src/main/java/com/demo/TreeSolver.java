@@ -144,6 +144,6 @@ public class TreeSolver {
                 sb.append((i + 1)).append(". ").append(swapSequence.get(i)).append("\n");
             }
             return sb.toString();
-        }
+      7/*    }
     }
 }
