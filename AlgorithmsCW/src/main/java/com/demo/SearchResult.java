@@ -8,8 +8,8 @@ Result class to hold solution information
 
 public class SearchResult {
 
-    private List<String> swapSequence;
-    private int numberOfSwaps;
+    private List<String> swapSequence; // String array to hold readable information about swap details
+    private int numberOfSwaps;// total number of swap
     private int nodesExplored;
 
     public SearchResult(List<String> swapSequence, int numberOfSwaps, int nodesExplored) {
