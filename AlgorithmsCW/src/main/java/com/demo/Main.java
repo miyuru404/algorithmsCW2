@@ -93,8 +93,8 @@ public class Main {
         System.out.println("\n=== PROGRAM FINISHED ===");
     }
 
-    /**
-     * Verifies that the solution actually transforms initial state to target state
+    /*
+      Verifies that the solution actually transforms initial state to target state
      */
     private static boolean verifySolution(TreeState initialState, TreeState targetState, SearchResult result) {
 
@@ -129,8 +129,8 @@ public class Main {
         return isValid;
     }
 
-    /**
-     * Extracts the first node index from a swap description
+    /*
+      Extracts the first node index from a swap description
      */
     private static int extractNodeIndex(String swapDescription) {
         try {
