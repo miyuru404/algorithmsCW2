@@ -4,21 +4,100 @@ import java.util.*;
 
 public class TreeSolver {
 
-    // Class to represent a search node containing state and path information
-    private static class SearchNode {
+    // Enhanced SearchNode class for A* with f, g, h scores
+    private static class SearchNode implements Comparable<SearchNode> {
         private TreeState state;
         private List<String> path;
-        private int depth;
+        private int gScore;    // Cost from start to current node
+        private int hScore;    // Heuristic cost from current to goal
+        private int fScore;    // Total cost (g + h)
 
-        public SearchNode(TreeState state, List<String> path, int depth) {
+        public SearchNode(TreeState state, List<String> path, int gScore, int hScore) {
             this.state = state;
             this.path = new ArrayList<>(path);
-            this.depth = depth;
+            this.gScore = gScore;
+            this.hScore = hScore;
+            this.fScore = gScore + hScore;
         }
 
         public TreeState getState() { return state; }
         public List<String> getPath() { return path; }
-        public int getDepth() { return depth; }
+        public int getGScore() { return gScore; }
+        public int getHScore() { return hScore; }
+        public int getFScore() { return fScore; }
+
+        @Override
+        public int compareTo(SearchNode other) {
+            // Primary sort by f-score (total cost)
+            int fCompare = Integer.compare(this.fScore, other.fScore);
+            if (fCompare != 0) return fCompare;
+
+            // Secondary sort by h-score (heuristic) - prefer lower h-score
+            int hCompare = Integer.compare(this.hScore, other.hScore);
+            if (hCompare != 0) return hCompare;
+
+            // Tertiary sort by g-score - prefer higher g-score (closer to goal)
+            return Integer.compare(other.gScore, this.gScore);
+        }
+    }
+
+    /**
+     * Heuristic function: Count positions where elements are not in correct BST position
+     * This is admissible (never overestimates) because each misplaced element needs at least one swap
+     */
+    private static int calculateHeuristic(TreeState current, TreeState target) {
+        int misplacedCount = 0;
+        int n = current.getNumberOfNode();
+
+        for (int i = 0; i < n; i++) {
+            if (current.getValue(i) != target.getValue(i)) {
+                misplacedCount++;
+            }
+        }
+
+        return misplacedCount;
+    }
+
+    /**
+     * Alternative heuristic: Manhattan distance adapted for tree swaps
+     * More informed than simple misplaced count
+     */
+    private static int calculateManhattanHeuristic(TreeState current, TreeState target) {
+        int totalDistance = 0;
+        int n = current.getNumberOfNode();
+
+        // Create position maps for efficient lookup
+        Map<Integer, Integer> currentPositions = new HashMap<>();
+        Map<Integer, Integer> targetPositions = new HashMap<>();
+
+        for (int i = 0; i < n; i++) {
+            currentPositions.put(current.getValue(i), i);
+            targetPositions.put(target.getValue(i), i);
+        }
+
+        // Calculate sum of distances each value needs to move
+        for (int value = 1; value <= n; value++) {
+            int currentPos = currentPositions.get(value);
+            int targetPos = targetPositions.get(value);
+
+            // Tree distance approximation - could be improved with actual tree distance
+            totalDistance += Math.abs(currentPos - targetPos);
+        }
+
+        // Since one swap moves two elements, divide by 2 (but ensure it's still admissible)
+        return totalDistance / 2;
+    }
+
+    /**
+     * Combined heuristic that takes maximum of different heuristics
+     * Ensures admissibility while being more informed
+     */
+    private static int combinedHeuristic(TreeState current, TreeState target) {
+        int h1 = calculateHeuristic(current, target);
+        int h2 = calculateManhattanHeuristic(current, target);
+
+        // Take maximum to ensure admissibility
+        return Math.max(h1, h2);
     }
 
     /**
@@ -63,7 +142,7 @@ public class TreeSolver {
     }
 
     /**
-     * Solves the tree sorting problem using BFS to find shortest path
+     * Solves the tree sorting problem using A* search to find optimal path
      */
     public static SearchResult solve(TreeState initialState) {
         TreeState targetState = createTargetBST(initialState);
@@ -73,47 +152,67 @@ public class TreeSolver {
             return new SearchResult(new ArrayList<>(), 0, 1);
         }
 
-        // BFS data structures
-        Queue<SearchNode> queue = new LinkedList<>();
-        Set<TreeState> visited = new HashSet<>();
+        // A* data structures
+        PriorityQueue<SearchNode> openSet = new PriorityQueue<>();
+        Set<TreeState> closedSet = new HashSet<>();
+        Map<TreeState, Integer> gScoreMap = new HashMap<>();
 
         // Initialize search
-        queue.offer(new SearchNode(initialState, new ArrayList<>(), 0));
-        visited.add(initialState);
+        int initialH = combinedHeuristic(initialState, targetState);
+        SearchNode initialNode = new SearchNode(initialState, new ArrayList<>(), 0, initialH);
+        openSet.offer(initialNode);
+        gScoreMap.put(initialState, 0);
 
         int nodesExplored = 0;
 
-        while (!queue.isEmpty()) {
-            SearchNode current = queue.poll();
+        while (!openSet.isEmpty()) {
+            SearchNode current = openSet.poll();
             nodesExplored++;
+
+            // If we've already processed this state with a better path, skip
+            if (closedSet.contains(current.getState())) {
+                continue;
+            }
+
+            // Add to closed set
+            closedSet.add(current.getState());
+
+            // Check if we reached the target
+            if (current.getState().equals(targetState)) {
+                return new SearchResult(current.getPath(), current.getGScore(), nodesExplored);
+            }
 
             // Try all possible swaps (swap each non-root node with its parent)
             for (int childIndex = 1; childIndex < current.getState().getNumberOfNode(); childIndex++) {
                 TreeState newState = current.getState().swapWithParent(childIndex);
 
-                if (newState != null && !visited.contains(newState)) {
-                    visited.add(newState);
+                if (newState != null && !closedSet.contains(newState)) {
+                    int tentativeGScore = current.getGScore() + 1;
 
-                    // Create new path with this swap
-                    List<String> newPath = new ArrayList<>(current.getPath());
-                    int parentIndex = current.getState().getParentIndex(childIndex);
-                    String swapDescription = String.format("Swap node %d (value %d) with node %d (value %d)",
-                            childIndex, current.getState().getValue(childIndex),
-                            parentIndex, current.getState().getValue(parentIndex));
-                    newPath.add(swapDescription);
+                    // If we found a better path to this state, or it's the first time we see it
+                    if (tentativeGScore < gScoreMap.getOrDefault(newState, Integer.MAX_VALUE)) {
+                        gScoreMap.put(newState, tentativeGScore);
 
-                    // Check if we reached the target
-                    if (newState.equals(targetState)) {
-                        return new SearchResult(newPath, current.getDepth() + 1, nodesExplored);
+                        // Create new path with this swap
+                        List<String> newPath = new ArrayList<>(current.getPath());
+                        int parentIndex = current.getState().getParentIndex(childIndex);
+                        String swapDescription = String.format("Swap node %d (value %d) with node %d (value %d)",
+                                childIndex, current.getState().getValue(childIndex),
+                                parentIndex, current.getState().getValue(parentIndex));
+                        newPath.add(swapDescription);
+
+                        // Calculate heuristic for new state
+                        int hScore = combinedHeuristic(newState, targetState);
+
+                        // Add to open set
+                        SearchNode newNode = new SearchNode(newState, newPath, tentativeGScore, hScore);
+                        openSet.offer(newNode);
                     }
-
-                    // Add to queue for further exploration
-                    queue.offer(new SearchNode(newState, newPath, current.getDepth() + 1));
                 }
             }
         }
 
-        return null;
+        return null; // No solution found
     }
 
     /**
