@@ -4,63 +4,27 @@ import java.util.*;
 
 public class TreeSolver {
 
-    // Class to represent a search node containing state and path information
+    // ✅ Compact record to store swap steps
+    private record Swap(int childIndex, int parentIndex) {}
+
+    // ✅ Node used in BFS
     private static class SearchNode {
         private TreeState state;
-        private List<String> path;
+        private SearchNode parent;
+        private Swap move;
         private int depth;
 
-
-        public SearchNode(TreeState state, List<String> path, int depth) {
+        public SearchNode(TreeState state, SearchNode parent, Swap move, int depth) {
             this.state = state;
-            this.path = new ArrayList<>(path);
+            this.parent = parent;
+            this.move = move;
             this.depth = depth;
         }
 
         public TreeState getState() { return state; }
-        public List<String> getPath() { return path; }
+        public SearchNode getParent() { return parent; }
+        public Swap getMove() { return move; }
         public int getDepth() { return depth; }
-    }
-
-    /**
-     * Creates the target BST state from the initial tree
-     * The target has the same structure but values arranged as a BST
-     */
-    public static TreeState createTargetBST(TreeState initialState) {
-        int n = initialState.getNumberOfNode();
-        int[] targetValues = new int[n];
-
-        // Get sorted values (1 to n)
-        List<Integer> sortedValues = new ArrayList<>();
-        for (int i = 1; i <= n; i++) {
-            sortedValues.add(i);
-        }
-
-        // Fill the tree in BST order using in-order traversal
-        fillBSTInOrder(targetValues, sortedValues, 0, 0, n - 1);
-
-        return new TreeState(targetValues);
-    }
-
-    /**
-     * Recursively fills the tree array to create a BST structure
-     */
-    private static void fillBSTInOrder(int[] tree, List<Integer> sortedValues,
-                                       int nodeIndex, int start, int end) {
-        if (start > end || nodeIndex >= tree.length) {
-            return;
-        }
-
-        // Calculate middle element for this subtree
-        int mid = start + (end - start) / 2;
-        tree[nodeIndex] = sortedValues.get(mid);
-
-        // Recursively fill left and right subtrees
-        int leftChild = 2 * nodeIndex + 1;
-        int rightChild = 2 * nodeIndex + 2;
-
-        fillBSTInOrder(tree, sortedValues, leftChild, start, mid - 1);
-        fillBSTInOrder(tree, sortedValues, rightChild, mid + 1, end);
     }
 
     /**
@@ -74,12 +38,10 @@ public class TreeSolver {
             return new SearchResult(new ArrayList<>(), 0, 1);
         }
 
-        // BFS data structures
         Queue<SearchNode> queue = new LinkedList<>();
         Set<TreeState> visited = new HashSet<>();
 
-        // Initialize search
-        queue.offer(new SearchNode(initialState, new ArrayList<>(), 0));
+        queue.offer(new SearchNode(initialState, null, null, 0));
         visited.add(initialState);
 
         int nodesExplored = 0;
@@ -88,28 +50,23 @@ public class TreeSolver {
             SearchNode current = queue.poll();
             nodesExplored++;
 
-            // Try all possible swaps (swap each non-root node with its parent)
             for (int childIndex = 1; childIndex < current.getState().getNumberOfNode(); childIndex++) {
                 TreeState newState = current.getState().swapWithParent(childIndex);
 
                 if (newState != null && !visited.contains(newState)) {
                     visited.add(newState);
 
-                    // Create new path with this swap
-                    List<String> newPath = new ArrayList<>(current.getPath());
                     int parentIndex = current.getState().getParentIndex(childIndex);
-                    String swapDescription = String.format("Swap node %d (value %d) with node %d (value %d)",
-                            childIndex, current.getState().getValue(childIndex),
-                            parentIndex, current.getState().getValue(parentIndex));
-                    newPath.add(swapDescription);
+                    Swap move = new Swap(childIndex, parentIndex);
+                    SearchNode newNode = new SearchNode(newState, current, move, current.getDepth() + 1);
 
-                    // Check if we reached the target
                     if (newState.equals(targetState)) {
-                        return new SearchResult(newPath, current.getDepth() + 1, nodesExplored);
+                        List<Swap> swapPath = reconstructPath(newNode);
+                        List<String> readablePath = convertToReadableSwapList(swapPath);
+                        return new SearchResult(readablePath, newNode.getDepth(), nodesExplored);
                     }
 
-                    // Add to queue for further exploration
-                    queue.offer(new SearchNode(newState, newPath, current.getDepth() + 1));
+                    queue.offer(newNode);
                 }
             }
         }
@@ -117,13 +74,61 @@ public class TreeSolver {
         return null;
     }
 
+    // ✅ Reconstruct path from goal node to root
+    private static List<Swap> reconstructPath(SearchNode node) {
+        List<Swap> path = new ArrayList<>();
+        while (node.getParent() != null) {
+            path.add(node.getMove());
+            node = node.getParent();
+        }
+        Collections.reverse(path);
+        return path;
+    }
+
+    // ✅ Convert Swap objects to readable strings
+    private static List<String> convertToReadableSwapList(List<Swap> swaps) {
+        List<String> readable = new ArrayList<>();
+        for (Swap swap : swaps) {
+            readable.add("Swap node " + swap.childIndex() + " with node " + swap.parentIndex());
+        }
+        return readable;
+    }
+
     /**
-     * Result class to hold solution information
+     * Builds the target BST layout with sorted values (structure preserved)
      */
+    public static TreeState createTargetBST(TreeState initialState) {
+        int n = initialState.getNumberOfNode();
+        int[] targetValues = new int[n];
+        List<Integer> sortedValues = new ArrayList<>();
+        for (int i = 1; i <= n; i++) {
+            sortedValues.add(i);
+        }
+
+        fillBSTInOrder(targetValues, sortedValues, 0, 0, n - 1);
+        return new TreeState(targetValues);
+    }
+
+    // ✅ Helper to fill BST using in-order traversal
+    private static void fillBSTInOrder(int[] tree, List<Integer> sortedValues,
+                                       int nodeIndex, int start, int end) {
+        if (start > end || nodeIndex >= tree.length) return;
+
+        int mid = start + (end - start) / 2;
+        tree[nodeIndex] = sortedValues.get(mid);
+
+        int left = 2 * nodeIndex + 1;
+        int right = 2 * nodeIndex + 2;
+
+        fillBSTInOrder(tree, sortedValues, left, start, mid - 1);
+        fillBSTInOrder(tree, sortedValues, right, mid + 1, end);
+    }
+
+    // ✅ Result class to return info to Main
     public static class SearchResult {
-        private List<String> swapSequence;
-        private int numberOfSwaps;
-        private int nodesExplored;
+        private final List<String> swapSequence;
+        private final int numberOfSwaps;
+        private final int nodesExplored;
 
         public SearchResult(List<String> swapSequence, int numberOfSwaps, int nodesExplored) {
             this.swapSequence = swapSequence;
