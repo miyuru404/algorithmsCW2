@@ -1,24 +1,21 @@
 package com.demo;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 
 public class TreeState {
 
-    private int[] treeValues;
+    private final int[] treeValues;// store value in an array
+    private final int computedHashCode; // pre-calculated hashcode because initial array is immutable
 
-    private final int cachedHash;
+    public TreeState(int[] values) {
 
-    public TreeState(int[] values){
-
-        treeValues = Arrays.copyOf(values, values.length);
-        this.cachedHash = Arrays.hashCode(treeValues); // hash is calculated once here
+        treeValues = Arrays.copyOf(values, values.length);// creating for new copy from initial arrays
+        this.computedHashCode = Arrays.hashCode(treeValues); // hash is calculated only one time and return it whenever call it
 
     }
 
 
-    public int getNumberOfNode(){
+    public int getNumberOfNode() {
         return treeValues.length;
     }
 
@@ -47,7 +44,12 @@ public class TreeState {
         return (rightChild < treeValues.length) ? rightChild : -1; // -1 if no right child (out of bounds)
     }
 
-    public TreeState swapWithParent(int childIndex) {
+     /*
+     most important method in this class
+     this method is hold the logic of how swapping two value must happen
+     */
+
+    public TreeState swap(int childIndex) {
 
         int parentIndex = getParentIndex(childIndex);
 
@@ -85,19 +87,19 @@ public class TreeState {
     }
 
 
-     /* hash code */
+    /* hash code */
 
     //@Override
     //public int hashCode() {
-        //  numberOfHashCodeCalled++;
-        // this ensures  Arrays.equals().
-       // return Arrays.hashCode(treeValues);
+    //  numberOfHashCodeCalled++;
+    // this ensures  Arrays.equals().
+    // return Arrays.hashCode(treeValues);
     //}
 
 
     @Override
     public int hashCode() {
-        return cachedHash; // return the saved value
+        return computedHashCode; // return the saved value
     }
 
 
@@ -105,8 +107,6 @@ public class TreeState {
     public String toString() {
         return Arrays.toString(treeValues);
     }
-
-
 
 
 }

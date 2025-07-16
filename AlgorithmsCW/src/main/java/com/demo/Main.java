@@ -1,13 +1,14 @@
 package com.demo;
 
 import com.demo.util.InputParser;
+
 import java.io.IOException;
 import java.util.Arrays;
 
 public class Main {
     public static void main(String[] args) {
 
-        String filePath =  "input/bounded_31_3.txt";
+        String filePath = "input/bounded_15_9.txt";
 
         System.out.println("\n=== TREE SORTING ALGORITHM ===");
         System.out.println("Input file: " + filePath);
@@ -29,7 +30,7 @@ public class Main {
 
             // Step 3: Generate target BST
             System.out.println("Step 3: Generating Target BST...\n");
-            TreeState targetState = TreeSolver.createTargetBST(initialState);
+            TreeState targetState = TargetBST.createTargetBST(initialState);
             System.out.println(" * Target BST state: " + targetState);
             System.out.println();
 
@@ -42,7 +43,7 @@ public class Main {
             // Step 4: Solve the problem
             System.out.println("Step 4: Finding Optimal Solution...\n");
             long startTime = System.currentTimeMillis();
-            TreeSolver.SearchResult result = TreeSolver.solve(initialState);
+            SearchResult result = TreeSolver.solve(initialState);
             long endTime = System.currentTimeMillis();
 
             // Step 5: Display results
@@ -87,10 +88,9 @@ public class Main {
     /**
      * Verifies that the solution actually transforms initial state to target state
      */
-    private static boolean verifySolution(TreeState initialState, TreeState targetState,
-                                          TreeSolver.SearchResult result) {
-        TreeState currentState = initialState;
+    private static boolean verifySolution(TreeState initialState, TreeState targetState, SearchResult result) {
 
+        TreeState currentState = initialState;
         System.out.println("Applying swap sequence step by step:");
         System.out.println("Step 0: " + currentState);
 
@@ -102,7 +102,7 @@ public class Main {
             int nodeIndex = extractNodeIndex(swapDescription);
 
             if (nodeIndex != -1) {
-                TreeState newState = currentState.swapWithParent(nodeIndex);
+                TreeState newState = currentState.swap(nodeIndex);
                 if (newState != null) {
                     currentState = newState;
                     System.out.println("Step " + (i + 1) + ": " + currentState + " ← " + swapDescription);
