@@ -105,6 +105,7 @@ public class TreeSolver {
         int hScore; // estimated steps to target
         int fScore; // total estimated cost
 
+
         public SearchNode(TreeState state, List<String> path, int gScore, int hScore) {
             this.state = state;
             this.path = path;
