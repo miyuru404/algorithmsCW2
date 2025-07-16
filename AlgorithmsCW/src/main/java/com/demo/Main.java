@@ -12,7 +12,7 @@ public class Main {
 
     public static void main(String[] args) {
 
-        start(filePath);// start the application
+        start(testFilePath);// start the application
 
     }
 
