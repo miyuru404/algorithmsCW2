@@ -94,11 +94,12 @@ public class TreeSolver {
             }
         }
 
-        return null; // No solution
+        return null;
     }
 
     // Represents a node in the A* search
     private static class SearchNode implements Comparable<SearchNode> {
+
         TreeState state;
         List<String> path;
         int gScore; // steps taken so far
@@ -118,7 +119,7 @@ public class TreeSolver {
         public int compareTo(SearchNode other) {
             if (this.fScore != other.fScore) return Integer.compare(this.fScore, other.fScore);
             if (this.hScore != other.hScore) return Integer.compare(this.hScore, other.hScore);
-            return Integer.compare(other.gScore, this.gScore); // prefer deeper if tied
+            return Integer.compare(other.gScore, this.gScore);
         }
     }
 }

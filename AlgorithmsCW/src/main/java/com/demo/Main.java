@@ -6,9 +6,19 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class Main {
+
+    public static String filePath = "input/bounded_15_9.txt";
+    public static String testFilePath = "input/test";
+
     public static void main(String[] args) {
 
-        String filePath = "input/bounded_15_9.txt";
+
+        start(filePath);// start the application
+
+
+    }
+
+    public static void start (String filePath){
 
         System.out.println("\n=== TREE SORTING ALGORITHM ===");
         System.out.println("Input file: " + filePath);
@@ -17,7 +27,9 @@ public class Main {
         try {
             // Step 1: Parse input file
             System.out.println("Step 01: Parsing Input...\n ");
+
             int[] treeData = InputParser.parser(filePath);
+
             System.out.println(" * parsed tree data: " + Arrays.toString(treeData));
             System.out.println(" * Number of nodes: " + treeData.length);
             System.out.println();
@@ -40,7 +52,7 @@ public class Main {
                 return;
             }
 
-            // Step 4: Solve the problem
+            // Step 4: if not sorted Solve the problem
             System.out.println("Step 4: Finding Optimal Solution...\n");
             long startTime = System.currentTimeMillis();
             SearchResult result = TreeSolver.solve(initialState);
@@ -49,8 +61,7 @@ public class Main {
             // Step 5: Display results
             if (result != null) {
                 System.out.println(" * Solution found!\n");
-                System.out.println(result);  // Uses SearchResult.toString() for nice output
-
+                System.out.println(result);
                 System.out.println("Execution time: " + (endTime - startTime) + " ms\n");
 
                 // Step 6: Verify solution
@@ -62,7 +73,7 @@ public class Main {
                 }
 
                 // Display performance metrics
-                System.out.println("\n--- Performance Metrics ---");
+                System.out.println("\n--- Performance  ---");
                 System.out.printf("Tree size: %d nodes\n", treeData.length);
                 System.out.printf("Time complexity: O(N! × N) where N = %d\n", treeData.length);
                 System.out.printf("Execution time: %d ms\n", (endTime - startTime));
@@ -81,7 +92,6 @@ public class Main {
             System.err.println("An unexpected error occurred: " + e.getMessage());
             e.printStackTrace();
         }
-
         System.out.println("\n=== PROGRAM FINISHED ===");
     }
 
