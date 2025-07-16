@@ -1,4 +1,5 @@
 package com.demo;
+
 import com.demo.util.InputParser;
 import java.io.IOException;
 import java.util.Arrays;
@@ -6,8 +7,7 @@ import java.util.Arrays;
 public class Main {
     public static void main(String[] args) {
 
-        // Use command line argument if provided, otherwise use default
-        String filePath =  "input/bounded_31_0.txt";
+        String filePath =  "input/bounded_31_3.txt";
 
         System.out.println("\n=== TREE SORTING ALGORITHM ===");
         System.out.println("Input file: " + filePath);
@@ -27,7 +27,6 @@ public class Main {
             System.out.println(" * Initial tree state: " + initialState);
             System.out.println();
 
-
             // Step 3: Generate target BST
             System.out.println("Step 3: Generating Target BST...\n");
             TreeState targetState = TreeSolver.createTargetBST(initialState);
@@ -42,31 +41,16 @@ public class Main {
 
             // Step 4: Solve the problem
             System.out.println("Step 4: Finding Optimal Solution...\n");
-            //System.out.println("Searching for minimum swap sequence...");
-
             long startTime = System.currentTimeMillis();
             TreeSolver.SearchResult result = TreeSolver.solve(initialState);
             long endTime = System.currentTimeMillis();
 
             // Step 5: Display results
-            //System.out.println("--- Step 5: Results ---");
             if (result != null) {
                 System.out.println(" * Solution found!\n");
-                System.out.println("Minimum swaps required: " + result.getNumberOfSwaps());
-                System.out.println("Nodes explored: " + result.getNodesExplored());
-                System.out.println("Execution time: " + (endTime - startTime) + " ms");
-                System.out.println();
+                System.out.println(result);  // Uses SearchResult.toString() for nice output
 
-                // Display swap sequence
-                System.out.println("--- Swap Sequence ---");
-                if (result.getSwapSequence().isEmpty()) {
-                    System.out.println("No swaps needed - tree is already sorted!");
-                } else {
-                    for (int i = 0; i < result.getSwapSequence().size(); i++) {
-                        System.out.println((i + 1) + ". " + result.getSwapSequence().get(i));
-                    }
-                }
-                System.out.println();
+                System.out.println("Execution time: " + (endTime - startTime) + " ms\n");
 
                 // Step 6: Verify solution
                 System.out.println("Verification");
@@ -77,14 +61,10 @@ public class Main {
                 }
 
                 // Display performance metrics
-                System.out.println();
-                System.out.println("--- Performance Metrics ---");
+                System.out.println("\n--- Performance Metrics ---");
                 System.out.printf("Tree size: %d nodes\n", treeData.length);
-                System.out.printf("Optimal solution length: %d swaps\n", result.getNumberOfSwaps());
-                System.out.printf("Search space explored: %d states\n", result.getNodesExplored());
                 System.out.printf("Time complexity: O(N! × N) where N = %d\n", treeData.length);
                 System.out.printf("Execution time: %d ms\n", (endTime - startTime));
-
             } else {
                 System.out.println("✗ No solution found!");
                 System.out.println("This should not happen for valid inputs.");
@@ -102,17 +82,6 @@ public class Main {
         }
 
         System.out.println("\n=== PROGRAM FINISHED ===");
-    }
-
-
-
-    /**
-     * Helper method to print specified number of spaces
-     */
-    private static void printSpaces(int count) {
-        for (int i = 0; i < count; i++) {
-            System.out.print(" ");
-        }
     }
 
     /**
