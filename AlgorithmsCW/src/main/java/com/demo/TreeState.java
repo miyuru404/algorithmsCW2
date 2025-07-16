@@ -1,16 +1,22 @@
 package com.demo;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
 public class TreeState {
 
     private int[] treeValues;
 
+    private final int cachedHash;
+
     public TreeState(int[] values){
 
         treeValues = Arrays.copyOf(values, values.length);
+        this.cachedHash = Arrays.hashCode(treeValues); // hash is calculated once here
 
     }
+
 
     public int getNumberOfNode(){
         return treeValues.length;
@@ -81,10 +87,17 @@ public class TreeState {
 
      /* hash code */
 
+    //@Override
+    //public int hashCode() {
+        //  numberOfHashCodeCalled++;
+        // this ensures  Arrays.equals().
+       // return Arrays.hashCode(treeValues);
+    //}
+
+
     @Override
     public int hashCode() {
-        // this ensures  Arrays.equals().
-        return Arrays.hashCode(treeValues);
+        return cachedHash; // return the saved value
     }
 
 
@@ -92,4 +105,8 @@ public class TreeState {
     public String toString() {
         return Arrays.toString(treeValues);
     }
+
+
+
+
 }
