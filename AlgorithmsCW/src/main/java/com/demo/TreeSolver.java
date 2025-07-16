@@ -2,154 +2,140 @@ package com.demo;
 
 import java.util.*;
 
+import static com.demo.TargetBST.createTargetBST;
+
 public class TreeSolver {
 
-    // ✅ Compact record to store swap steps
-    private record Swap(int childIndex, int parentIndex) {}
-
-    // ✅ Node used in BFS
-    private static class SearchNode {
-        private TreeState state;
-        private SearchNode parent;
-        private Swap move;
-        private int depth;
-
-        public SearchNode(TreeState state, SearchNode parent, Swap move, int depth) {
-            this.state = state;
-            this.parent = parent;
-            this.move = move;
-            this.depth = depth;
+    // Heuristic #1: Count how many nodes are not in their target positions.
+    // This gives a rough estimate of how far we are from the solution.
+    private static int calculateHeuristic(TreeState current, TreeState target) {
+        int misplaced = 0;
+        for (int i = 0; i < current.getNumberOfNode(); i++) {
+            if (current.getValue(i) != target.getValue(i)) misplaced++;
         }
-
-        public TreeState getState() { return state; }
-        public SearchNode getParent() { return parent; }
-        public Swap getMove() { return move; }
-        public int getDepth() { return depth; }
+        return misplaced;
     }
 
-    /**
-     * Solves the tree sorting problem using BFS to find shortest path
-     */
-    public static SearchResult solve(TreeState initialState) {
-        TreeState targetState = createTargetBST(initialState);
+    // Heuristic #2: A more refined estimate using index distance.
+    // Measures how far each value is from its goal position, on average.
+    private static int calculateManhattanHeuristic(TreeState current, TreeState target) {
+        int total = 0, n = current.getNumberOfNode();
+        Map<Integer, Integer> currentPos = new HashMap<>();
+        Map<Integer, Integer> targetPos = new HashMap<>();
 
-        // If already at target, return empty solution
+        // Store positions of each value in both current and target trees
+        for (int i = 0; i < n; i++) {
+            currentPos.put(current.getValue(i), i);
+            targetPos.put(target.getValue(i), i);
+        }
+
+        // Add up the absolute position differences
+        for (int val = 1; val <= n; val++) {
+            total += Math.abs(currentPos.get(val) - targetPos.get(val));
+        }
+
+        return total / 2; // Approximate number of swaps (since each swap affects two values)
+    }
+
+    // Combined heuristic: Use the more pessimistic (higher) value to stay admissible for A*
+    private static int combinedHeuristic(TreeState current, TreeState target) {
+        return Math.max(
+                calculateHeuristic(current, target),
+                calculateManhattanHeuristic(current, target)
+        );
+    }
+
+    // Main method to solve the tree using the A* search algorithm
+    public static SearchResult solve(TreeState initialState) {
+        TreeState targetState = createTargetBST(initialState); // Build the ideal target BST
+
+        // If the current state is already sorted, return
         if (initialState.equals(targetState)) {
             return new SearchResult(new ArrayList<>(), 0, 1);
         }
 
-        Queue<SearchNode> queue = new LinkedList<>();
-        Set<TreeState> visited = new HashSet<>();
+        // Open set stores nodes to explore
+        PriorityQueue<SearchNode> openSet = new PriorityQueue<>();
+        Set<TreeState> closedSet = new HashSet<>(); // To avoid re-exploring visited states
+        Map<TreeState, Integer> gScoreMap = new HashMap<>(); // Cost from start to a given state
 
-        queue.offer(new SearchNode(initialState, null, null, 0));
-        visited.add(initialState);
+        // Start from the initial state
+        int initialH = combinedHeuristic(initialState, targetState);
+        openSet.offer(new SearchNode(initialState, new ArrayList<>(), 0, initialH));
+        gScoreMap.put(initialState, 0);
 
         int nodesExplored = 0;
 
-        while (!queue.isEmpty()) {
-            SearchNode current = queue.poll();
+
+        while (!openSet.isEmpty()) {
+            SearchNode current = openSet.poll();
             nodesExplored++;
 
-            for (int childIndex = 1; childIndex < current.getState().getNumberOfNode(); childIndex++) {
-                TreeState newState = current.getState().swapWithParent(childIndex);
+            // If we've already explored this state, skip it
+            if (closedSet.contains(current.state)) continue;
+            closedSet.add(current.state);
 
-                if (newState != null && !visited.contains(newState)) {
-                    visited.add(newState);
+            // if we’ve reached the target tree configuration
+            if (current.state.equals(targetState)) {
+                return new SearchResult(current.path, current.gScore, nodesExplored);
+            }
 
-                    int parentIndex = current.getState().getParentIndex(childIndex);
-                    Swap move = new Swap(childIndex, parentIndex);
-                    SearchNode newNode = new SearchNode(newState, current, move, current.getDepth() + 1);
+            int n = current.state.getNumberOfNode();
 
-                    if (newState.equals(targetState)) {
-                        List<Swap> swapPath = reconstructPath(newNode);
-                        List<String> readablePath = convertToReadableSwapList(swapPath);
-                        return new SearchResult(readablePath, newNode.getDepth(), nodesExplored);
-                    }
+            // Try swapping each child with its parent
+            for (int child = 1; child < n; child++) {
+                TreeState newState = current.state.swap(child);
 
-                    queue.offer(newNode);
+                // Skip invalid or already explored states
+                if (newState == null || closedSet.contains(newState)) continue;
+
+                int tentativeG = current.gScore + 1; // One swap done
+
+                // If this path is better (shorter), update the scores
+                if (tentativeG < gScoreMap.getOrDefault(newState, Integer.MAX_VALUE)) {
+                    gScoreMap.put(newState, tentativeG);
+
+                    // Record the swap that was made
+                    List<String> newPath = new ArrayList<>(current.path);
+                    int parent = current.state.getParentIndex(child);
+                    newPath.add(String.format(
+                            "Swap node %d (value %d) with node %d (value %d)",
+                            child, current.state.getValue(child),
+                            parent, current.state.getValue(parent))
+                    );
+
+                    // Calculate estimated cost to goal
+                    int hScore = combinedHeuristic(newState, targetState);
+                    openSet.offer(new SearchNode(newState, newPath, tentativeG, hScore));
                 }
             }
         }
-
         return null;
     }
 
-    // ✅ Reconstruct path from goal node to root
-    private static List<Swap> reconstructPath(SearchNode node) {
-        List<Swap> path = new ArrayList<>();
-        while (node.getParent() != null) {
-            path.add(node.getMove());
-            node = node.getParent();
-        }
-        Collections.reverse(path);
-        return path;
-    }
+    // Internal helper class to represent a node in the search tree for A* algorithm
+    private static class SearchNode implements Comparable<SearchNode> {
 
-    // ✅ Convert Swap objects to readable strings
-    private static List<String> convertToReadableSwapList(List<Swap> swaps) {
-        List<String> readable = new ArrayList<>();
-        for (Swap swap : swaps) {
-            readable.add("Swap node " + swap.childIndex() + " with node " + swap.parentIndex());
-        }
-        return readable;
-    }
+        TreeState state;
+        List<String> path; // The swap steps taken to reach this state
+        int gScore; // Actual cost from start to this node
+        int hScore; // Estimated cost from this node to goal
+        int fScore; // Total estimated cost (g + h)
 
-    /**
-     * Builds the target BST layout with sorted values (structure preserved)
-     */
-    public static TreeState createTargetBST(TreeState initialState) {
-        int n = initialState.getNumberOfNode();
-        int[] targetValues = new int[n];
-        List<Integer> sortedValues = new ArrayList<>();
-        for (int i = 1; i <= n; i++) {
-            sortedValues.add(i);
+        public SearchNode(TreeState state, List<String> path, int gScore, int hScore) {
+            this.state = state;
+            this.path = path;
+            this.gScore = gScore;
+            this.hScore = hScore;
+            this.fScore = gScore + hScore;
         }
 
-        fillBSTInOrder(targetValues, sortedValues, 0, 0, n - 1);
-        return new TreeState(targetValues);
-    }
-
-    // ✅ Helper to fill BST using in-order traversal
-    private static void fillBSTInOrder(int[] tree, List<Integer> sortedValues,
-                                       int nodeIndex, int start, int end) {
-        if (start > end || nodeIndex >= tree.length) return;
-
-        int mid = start + (end - start) / 2;
-        tree[nodeIndex] = sortedValues.get(mid);
-
-        int left = 2 * nodeIndex + 1;
-        int right = 2 * nodeIndex + 2;
-
-        fillBSTInOrder(tree, sortedValues, left, start, mid - 1);
-        fillBSTInOrder(tree, sortedValues, right, mid + 1, end);
-    }
-
-    // ✅ Result class to return info to Main
-    public static class SearchResult {
-        private final List<String> swapSequence;
-        private final int numberOfSwaps;
-        private final int nodesExplored;
-
-        public SearchResult(List<String> swapSequence, int numberOfSwaps, int nodesExplored) {
-            this.swapSequence = swapSequence;
-            this.numberOfSwaps = numberOfSwaps;
-            this.nodesExplored = nodesExplored;
-        }
-
-        public List<String> getSwapSequence() { return swapSequence; }
-        public int getNumberOfSwaps() { return numberOfSwaps; }
-        public int getNodesExplored() { return nodesExplored; }
-
+        // Nodes with lower fScore get higher priority in the queue
         @Override
-        public String toString() {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Solution found in ").append(numberOfSwaps).append(" swaps:\n");
-            sb.append("Nodes explored: ").append(nodesExplored).append("\n");
-            sb.append("Swap sequence:\n");
-            for (int i = 0; i < swapSequence.size(); i++) {
-                sb.append((i + 1)).append(". ").append(swapSequence.get(i)).append("\n");
-            }
-            return sb.toString();
+        public int compareTo(SearchNode other) {
+            if (this.fScore != other.fScore) return Integer.compare(this.fScore, other.fScore);
+            if (this.hScore != other.hScore) return Integer.compare(this.hScore, other.hScore);
+            return Integer.compare(other.gScore, this.gScore); // Prefer deeper paths if tie
         }
     }
 }
