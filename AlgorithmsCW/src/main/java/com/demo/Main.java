@@ -7,7 +7,7 @@ import java.util.Arrays;
 
 public class Main {
 
-    public static String filePath = "input/bounded_15_9.txt";
+    public static String filePath = "input/bounded_15_0.txt";
     public static String testFilePath = "input/test";
 
     public static void main(String[] args) {
