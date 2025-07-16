@@ -7,10 +7,7 @@ import java.util.Arrays;
 public class Main {
     public static void main(String[] args) {
 
-        // Use command line argument if provided, otherwise use default
-        String filePath = "input/bounded_15_3.txt";
-        System.out.printf("Max Heap Size: %.2f GB%n", Runtime.getRuntime().maxMemory() / (1024.0 * 1024 * 1024));
-
+        String filePath =  "input/bounded_15_2.txt";
 
         System.out.println("\n=== TREE SORTING ALGORITHM ===");
         System.out.println("Input file: " + filePath);
